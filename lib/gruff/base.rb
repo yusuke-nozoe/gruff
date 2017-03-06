@@ -1086,7 +1086,7 @@ module Gruff
     # Return a formatted string representing a number value that should be
     # printed as a label.
     def label(value, increment)
-      format_number(value)
+      format_number(Integer(value))
     end
 
     def format_number(n)
