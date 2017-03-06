@@ -1086,33 +1086,38 @@ module Gruff
     # Return a formatted string representing a number value that should be
     # printed as a label.
     def label(value, increment)
-      label = if increment
-                if increment >= 10 || (increment * 1) == (increment * 1).to_i.to_f
-                  sprintf('%0i', value)
-                elsif increment >= 1.0 || (increment * 10) == (increment * 10).to_i.to_f
-                  sprintf('%0.1f', value)
-                elsif increment >= 0.1 || (increment * 100) == (increment * 100).to_i.to_f
-                  sprintf('%0.2f', value)
-                elsif increment >= 0.01 || (increment * 1000) == (increment * 1000).to_i.to_f
-                  sprintf('%0.3f', value)
-                elsif increment >= 0.001 || (increment * 10000) == (increment * 10000).to_i.to_f
-                  sprintf('%0.4f', value)
-                else
-                  value.to_s
-                end
-              elsif (@spread.to_f % (@marker_count.to_f==0 ? 1 : @marker_count.to_f) == 0) || !@y_axis_increment.nil?
-                value.to_i.to_s
-              elsif @spread > 10.0
-                sprintf('%0i', value)
-              elsif @spread >= 3.0
-                sprintf('%0.2f', value)
-              else
-                value.to_s
-              end
+      format_number(value)
+    end
 
-      parts = label.split('.')
-      parts[0].gsub!(/(\d)(?=(\d\d\d)+(?!\d))/, "\\1#{THOUSAND_SEPARATOR}")
-      parts.join('.')
+    def format_number(n)
+      ret = ''
+      last_part = ''
+      if n.is_a? Integer
+        negative = n < 0
+        str = n.abs.to_s
+        if str.length > 12
+          parts = [str[0..-13], str[-12..-9], str[-8..-5]]
+          ret += parts[0] + '兆' if parts[0] != '0000'
+          ret += parts[1] + '億' if parts[1] != '0000'
+          ret += parts[2] + '万' if parts[2] != '0000'
+          last_part = str[-4..str.length-1]
+        elsif str.length > 8
+          parts = [str[0..-9], str[-8..-5]]
+          ret += parts[0] + '億' if parts[0] != '0000'
+          ret += parts[1] + '万' if parts[1] != '0000'
+          last_part = str[-4..str.length-1]
+        elsif str.length > 4
+          ret = str[0..-5] + '万' if str[0..-1] != '0000'
+          last_part = str[-4..str.length-1]
+        else
+          ret = str
+        end
+        ret += last_part if last_part != '0000'
+        ret = '-' + ret if negative
+      else
+        ret = '-'
+      end
+      ret
     end
 
     # Returns the height of the capital letter 'X' for the current font and
